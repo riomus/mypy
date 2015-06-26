@@ -21,7 +21,7 @@ class KpiDriver(object):
         data={'values':[]}
         kpidata={"sourceDN": sourcedn, "targetDN": sourcedn+'/target'}
         for kpi in kpinamelist:
-            kpidata[kpi]=11
+            kpidata[kpi]=numpy.round(numpy.random.uniform(0, 100,),2)
         data['values'].append(kpidata)
         return  data
 
