@@ -124,48 +124,32 @@ class LteCPX(object):
 
     def getKPIs(self, scopelist):
 
-        formdata = {
+        '''formdata = {
 
             "scope": ",".join(scopelist),
             "kpi_name": ",".join(self.kpiNames),
             "kpiRetrievalFilter": "WEEK,SUM,1,true"
         }
-        # //get the KPI data for the DN
+        # //get the KPI data for the DN from Real KPIStorage - Commemeted out for time being
         requestid = requests.post(self.ip + "/KPIStorage/v1/KPIS", data=formdata)
-
         self.logger.info("Request ID received from KPIStorage is %s", requestid.text)
         jsonop = requestid.json()
         self.logger.info("Request URL received from KPIStorage is %s", jsonop['url'])
-        kpidata = requests.get(jsonop['url'])
+        kpidata = requests.get(jsonop['url'])'''
 
-        r=""
-        # Read the request one by one
-        '''for line in kpidata.iter_lines():
-            try:
-               if(line) :
-                 print(line)
+        #Use A dummy KPI Testdriver instead
 
-                 r = r+ json.dumps(line)
+        kpidata = requests.post("http://127.0.0.1:8081/kpidriver/POST",
+                          data={'sourcednlist': scopelist, 'kpinamelist': self.kpiNames, 'starttime': "12-01-2015",
+                                'endtime': '12-06-2015'})
 
-            except TypeError as e:
-                self.logger.info("Unable to parse Json")
-                return("{}")
-        '''
-
-        try:
-           print(kpidata.text)
-           r =  json.dumps(kpidata.text)
-
-        except TypeError as e:
-            self.logger.info("Unable to parse Json")
-            return("{}")
+        r = ""
 
         return r
 
 
-    # go through the list
-    # r = requests.get(ip + "/softvimapp/v1/CM/1/")
-
+        # go through the list
+        # r = requests.get(ip + "/softvimapp/v1/CM/1/")
 
 
 if __name__ == "__main__":
