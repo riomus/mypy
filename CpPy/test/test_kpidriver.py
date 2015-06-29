@@ -21,3 +21,10 @@ class TestKpiDriver(TestCase):
         print(ret)
         ret2= testme.createmainJsonStr(ret,"2015-06-08T00:00:00.000+0300","2015-06-15T00:00:00.000+0300")
         print(ret2)
+
+
+    def test_post(self):
+        sourcednlist=["a","b","c"]
+        testme =KpiDriver()
+        r=testme.POST(sourcednlist,self.kpiNames,"startTime","endTime")
+        self.assertTrue(len(r['values']),3)

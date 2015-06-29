@@ -6,4 +6,4 @@ __author__ = 'acp'
 
 if __name__ == "__main__":
     cherrypy.config.update({'server.socket_port': 8081})
-    cherrypy.quickstart(KpiDriver(),'/kpiservice')
+    cherrypy.quickstart(KpiDriver(),'/kpidriver')
