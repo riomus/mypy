@@ -12,20 +12,17 @@ class KpiDriver(object):
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def POST(self,sourcednlist,kpinamelist,starttime,endtime):
-         print("Got a post request")
-         r= self.createJsonforKpiname(sourcednlist,kpinamelist)
-         k= self.createmainJsonStr(r,starttime,endtime)
-         return  k
+    def POST(self,sourcedn,kpinames,starttime,endtime):
+         with open("D:\_del\jsonresp.txt") as jsonfile:
+           kpidata= json.load(jsonfile)
+           return kpidata
 
-
-    def createJsonforKpiname(self,sourcednlist,kpinamelist):
+    def createJsonforKpiname(self,sourcedn,kpinamelist):
         data={'values':[]}
-        for sourcedn in sourcednlist:
-            kpidata={"sourceDN": sourcedn, "targetDN": sourcedn+'/target'}
-            for kpi in kpinamelist:
-                kpidata[kpi]=numpy.round(numpy.random.uniform(0, 100,),2)
-            data['values'].append(kpidata)
+        kpidata={"sourceDN": sourcedn, "targetDN": sourcedn+'/target'}
+        for kpi in kpinamelist:
+            kpidata[kpi]=numpy.round(numpy.random.uniform(0, 100,),2)
+        data['values'].append(kpidata)
         return  data
 
     def createmainJsonStr(self,kpinamejson,periodStart,periodEnd):
