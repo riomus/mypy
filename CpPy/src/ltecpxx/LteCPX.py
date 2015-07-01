@@ -7,7 +7,7 @@ import time
 import json
 
 from multiprocessing import Pool
-from  memory_profiler import profile
+
 
 ''' Test Code to mimick a Content Pack, Interfacing with SoftVim
     and KPIStorage, running a simple numerical algorithm
@@ -74,12 +74,12 @@ class LteCPX(object):
 
     # To test streaming
     @cherrypy.expose
-    # http://127.0.0.1:8099/startoperaion?nodeid=clab869node02&scopeid=12
+    # http://127.0.0.1:8099/stest
     def test(self):
-        for i in range(0, 4):
-            yield "Hello"
+        for i in range(0, 20):
+            yield "Hello\n"
             time.sleep(1)
-            yield "World"
+            yield "World -Power of yeild\n"
             # Enable streaming for the ping method.  Without this it won't work.
 
     test._cp_config = {'response.stream': True}
