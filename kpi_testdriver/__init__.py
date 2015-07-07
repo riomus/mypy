@@ -1,6 +1,6 @@
 import cherrypy
 
-from CpPy.src.kpi_testdriver.kpidriver import KpiDriver
+from kpi_testdriver.kpidriver import KpiDriver
 
 __author__ = 'acp'
 

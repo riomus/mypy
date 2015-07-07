@@ -1,3 +1,10 @@
+from __future__ import (absolute_import, division, print_function, unicode_literals)
+from builtins import (
+         bytes, dict, int, list, object, range, str,
+         ascii, chr, hex, input, next, oct, open,
+         pow, round, super,
+         filter, map, zip)
+
 __author__ = 'acp'
 
 import cherrypy
@@ -5,6 +12,7 @@ import requests
 import logging
 import time
 import json
+
 
 from multiprocessing import Pool
 
@@ -65,7 +73,7 @@ class LteCPX(object):
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    # http://127.0.0.1:8099/getscopes?nodeid=clab869node02
+    # http://127.0.0.1:8099/getscopes?nodeid=sprintlab476vm6
     def getscopes(self, nodeid):
         self.logger.info("In call to get Scopes")
         ip = "http://%s.netact.nsn-rdnet.net:9080" % nodeid

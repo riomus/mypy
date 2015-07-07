@@ -1,7 +1,7 @@
 __author__ = 'acp'
 from unittest import TestCase
 
-from CpPy.src.kpi_testdriver.kpidriver import KpiDriver
+from kpi_testdriver.kpidriver import KpiDriver
 
 
 class TestKpiDriver(TestCase):
