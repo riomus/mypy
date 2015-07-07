@@ -1,9 +1,5 @@
-from __future__ import (absolute_import, division, print_function, unicode_literals)
-from builtins import (
-         bytes, dict, int, list, object, range, str,
-         ascii, chr, hex, input, next, oct, open,
-         pow, round, super,
-         filter, map, zip)
+from __future__ import (absolute_import, division,print_function, unicode_literals)
+from builtins import *
 
 __author__ = 'acp'
 
@@ -11,16 +7,12 @@ import cherrypy
 import requests
 import logging
 import time
-import json
-
-
-from multiprocessing import Pool
-
 
 ''' Test Code to mimick a Content Pack, Interfacing with SoftVim
     and KPIStorage, running a simple numerical algorithm
     and giving out some data via REST'''
 
+print("Running in Python 3 Style")
 
 def sublist(thislist, chunksize):
     mylist = []
@@ -32,7 +24,7 @@ def sublist(thislist, chunksize):
     return mylist
 
 
-def sublistYeild(thislist, chunksize):
+def __sublistYeild(thislist, chunksize):
     while len(thislist) > 0:
         a = thislist[:chunksize]
         yield a
@@ -82,7 +74,7 @@ class LteCPX(object):
 
     # To test streaming
     @cherrypy.expose
-    # http://127.0.0.1:8099/stest
+    # http://127.0.0.1:8099/test
     def test(self):
         for i in range(0, 20):
             yield "Hello\n"
@@ -107,7 +99,7 @@ class LteCPX(object):
 
             self.logger.info("Number of DNs for the ScopeId %s is %s", scopeid, len(dnlist))
             if len(dnlist) == 0:
-                return "No DNs for the Specific Scope"
+                yield "No DNs for the Specific Scope"
             self.logger.info(" DN for scope are %s", dnlist)
 
             # Batch the kpi data
@@ -145,11 +137,12 @@ class LteCPX(object):
         self.logger.info("Request URL received from KPIStorage is %s", jsonop['url'])
         kpidata = requests.get(jsonop['url'])'''
 
-        #Use A dummy KPI Testdriver instead
+        # Use A dummy KPI Testdriver instead
 
         kpidata = requests.post("http://127.0.0.1:8081/kpidriver/POST",
-                          data={'sourcednlist': scopelist, 'kpinamelist': self.kpiNames, 'starttime': "12-01-2015",
-                                'endtime': '12-06-2015'})
+                                data={'sourcednlist': scopelist, 'kpinamelist': self.kpiNames,
+                                      'starttime': "12-01-2015",
+                                      'endtime': '12-06-2015'})
 
         r = ""
 
