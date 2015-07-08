@@ -94,13 +94,16 @@ class LteCPX(object):
             dnlist = []
             self.ip = "http://%s.netact.nsn-rdnet.net:9080" % nodeid
             r = requests.get(self.ip + "/ScopeRegistryService/v1/scopes/" + scopeid + "/elements/resolve")
+            if len(dnlist) == 0:
+                yield "No DNs for the Specific Scope"
+                raise StopIteration
+            self.logger.info(" DN for scope are %d", len(dnlist))
+
             for key in r.json():  # iterate over a list
                 dnlist.append(key['elementId'])  # get element from a dict - which has the DN
 
             self.logger.info("Number of DNs for the ScopeId %s is %s", scopeid, len(dnlist))
-            if len(dnlist) == 0:
-                yield "No DNs for the Specific Scope"
-            self.logger.info(" DN for scope are %s", dnlist)
+
 
             # Batch the kpi data
             dnsublist = sublist(dnlist, 10)
