@@ -1,12 +1,12 @@
 from unittest import TestCase
 import resource
+import json
 
 from  memory_profiler import profile
-import ltecpxx
+from celery import Celery
+
 from  ltecpxx.ltecp import LteCPX
 import ltecpxx.scopeservicehelper as t
-from celery import Celery
-import unittest.mock as mock
 
 __author__ = 'acp'
 
@@ -18,19 +18,39 @@ class TestLteCPX(TestCase):
         print("In call to mocked getDNFromScope %s" % scopeid)
         return ['a', 'b', 'c']
 
-
     def test_startoperatio(self):
         try:
             t.getDNFromScope = self.mockgetDNFromScope  # mocking call to scope service
             mytest = LteCPX()
-            Celery.CELERY_ALWAYS_EAGER=True
-            mytest.startoperation('sourcescopeid', 'targetscopeid', 'nodeid')
+            Celery.CELERY_ALWAYS_EAGER = True
+            ret = mytest.startoperation('sourcescopeid', 'targetscopeid', 'nodeid', batchsize=1)
+            reto = json.loads(ret)
+            self.assertTrue(reto['NumberofSubtasks'] == 3)
         finally:
             t.getDNFromScope = TestLteCPX.orignalfunciton  # reverting mock
 
+    def test_checkTaskStatus(self):
+
+        try:
+            t.getDNFromScope = self.mockgetDNFromScope  # mocking call to scope service
+            mytest = LteCPX()
+            Celery.CELERY_ALWAYS_EAGER = True
+            ret = mytest.startoperation('sourcescopeid', 'targetscopeid', 'nodeid', batchsize=1)
+            self.assertTrue(mytest.tasklist)#this contains one main tast
+            mytest.checkTaskStatus()
+            self.assertFalse(mytest.tasklist)#this is empty of one main taks
+            self.assertTrue(mytest.completedtasklist) #this contains one main tasks
+            for e in mytest.completedtasklist:
+                for keys in e:
+                    for r in e[keys]:
+                        self.assertTrue(r.ready()) #All tasjs are done here
+
+        finally:
+            t.getDNFromScope = TestLteCPX.orignalfunciton  # reverting mock
+
+
     @profile
     def testsublist(self):
-
         print("Going to test testsublist")
         mydn = "A pretty larger DN Stirng here to test and unique {0}"
         mylist = []

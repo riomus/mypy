@@ -10,7 +10,7 @@ Get the targetcells from the sourcedns and if it is not present in tragetdnlist
 remove those
 '''
 @app.task
-def doTargetprefilter(self,sourcednlist,targetdnlist):
+def doTargetprefilter(sourcednlist,targetdnlist):
 
     #get the Kpi's for sourcednlist
     print("Source DN list length is %d" % len(sourcednlist))
