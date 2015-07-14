@@ -11,6 +11,9 @@ import logging
 import uuid
 import json
 from enum import Enum
+from  datetime import datetime, timedelta
+from celery.result import ResultSet
+from celery import Celery
 
 ''' Test Code to mimick a Content Pack, Interfacing with SoftVim
     and KPIStorage, running a simple numerical algorithm
@@ -46,6 +49,7 @@ class LteCPX(object):
     def __init__(self):
         self.tasklist = []
         self.completedtasklist = []
+        self.failedtasklist = []
         self.logger = logging.getLogger(__name__)
         hdlr = logging.FileHandler('/tmp/myapp.log')
         # create console handler with a higher log level
@@ -88,22 +92,8 @@ class LteCPX(object):
             dnsublist = sublist(sourcednlist, batchsize)
             self.logger.info(" DN SubList size %s", dnsublist.__len__())
 
-            # Send the Task to Celery Queue
-            import ltecpxx.mrosimpleexecutor as r
-
-            taskid = uuid.uuid1().int  # create a unique main task id
-            self.tasklist.append({taskid: []})
-            for sourcedns in dnsublist:
-                # send sub tasks for the main task to Celery
-                result = r.doTargetprefilter.delay(sourcedns, targetdnlist)
-                # append the subtasks to the  m ain task
-                self.tasklist[-1][taskid].append(result)
-                print("Result isdone", result.ready())
-
-            print("Task List Conents", self.tasklist)
-
-            # return the status of of the operation
-            resp = {'TaskId': taskid, 'NumberofSubtasks': dnsublist.__len__(), 'RunState': str(RunState.Submitted)}
+            # Send to the distributed Queue
+            resp = self.distributetasks(dnsublist, targetdnlist, workername="ltecpxx.mrosimpleexecutor.SimplePrefilter")
 
             # resp="{{TaskId: {0}, NumberofSubtasks:{1},RunState:Started }}".format(taskid,dnsublist.__len__())
             print(resp)
@@ -113,6 +103,30 @@ class LteCPX(object):
         except RuntimeError as e:
             self.logger.error("Exception occurred ", e.strerror, e.errno)
             raise
+
+    def distributetasks(self, dnsublist, targetdnlist, workername=""):
+        # Send the Task to Celery Queue
+        import ltecpxx.mrosimpleexecutor as r
+
+        taskid = uuid.uuid1().int  # create a unique main task id
+        self.tasklist.append({taskid: ''})
+        resultset = ResultSet([])
+        for sourcedns in dnsublist:
+            # send sub tasks for the main task to Celery
+            args = (sourcedns, targetdnlist)
+            kwargs= {'workername':workername}
+            celery = Celery()
+            celery.conf.CELERY_ALWAYS_EAGER = True
+            celery.conf.CELERY_ALWAYS_EAGER = True
+            result = r.doTargetprefilter.apply_async(args,kwargs)
+            resultset.add(result)
+            #print("Result Is Done %s Value is %d Is Done  Now %s" % (result.ready(),result.get(),result.ready()))
+            print("Result Is Done %s "  % result.ready())
+        self.tasklist[-1][taskid] = resultset
+        print("Task List Conents", self.tasklist)
+        # return the status of of the operation
+        resp = {'TaskId': taskid, 'NumberofSubtasks': dnsublist.__len__(), 'RunState': str(RunState.Submitted)}
+        return resp
 
     startoperation._cp_config = {'response.stream': True}
 
@@ -125,25 +139,18 @@ class LteCPX(object):
         for element in self.tasklist:
             print(element)
             for key in element.keys():
-                print("TaskId=%d Sublist Count=%d" % (key, len(element[key])))
-                subtasklist = element[key]
-                # uncompletedtasklist = filter(self.checkiftasknotdone, subtasklist)
-                # now apply a filter on easch item in the task list
-                uncompletedtasklist = [x for x in subtasklist if
-                                       not self.checkiftaskdone(x)]  # list compr better than filter
-                # check if all task succeeded
-                if not uncompletedtasklist:
-                    # element['RunState'] = RunState.Success
+                resultset = element[key]
+                print("TaskId=%d Sublist Count=%d" % (key, len(resultset.results)))
+                subtasklist = resultset.results
+
+                # If all tasks are succeded
+                if resultset.ready() and resultset.successful():
                     self.completedtasklist.append(element)
                     self.tasklist.remove(element)
-                else:
-                    # some sub task failed
-                    print("Some subtask failed %d" % len(uncompletedtasklist))
-                    #check their retry count
-                    #or mark task as failed and move to failed task
-
-    def checkiftaskdone(self, asyncobj):
-        return asyncobj.ready()
+                # If at least one task is failed
+                if resultset.ready() and resultset.failed():
+                    self.failedtasklist.append(element)
+                    self.tasklist.remove(element)
 
 
 if __name__ == "__main__":
